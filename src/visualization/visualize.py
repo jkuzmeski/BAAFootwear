@@ -150,7 +150,7 @@ def compare_trendlines(trendline_data):
 
 
 shoeChoice = load_data(r'D:\BAAFootwear\data\Raw\ShoeChoices.csv')
-speed = load_data(r'D:\BAAFootwear\data\Raw\MilesPerHour.csv')
+speed = load_data(r'D:\BAAFootwear\data\Raw\KMH.csv')
 
 shoeChoice = fix_shoeChoices(shoeChoice)
 

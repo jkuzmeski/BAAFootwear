@@ -11,7 +11,7 @@ from statsmodels.stats.multicomp import pairwise_tukeyhsd
 import statsmodels.api as sm
 
 # Constants
-MINIMUM_RUNNERS = 5
+MINIMUM_RUNNERS = 20
 FIGURE_SIZE = (12, 8)
 COLORS = ['b', 'g', 'r', 'c', 'm', 'y', 'k', '#FFA500', '#800080', '#008080']
 SIGNIFICANCE_LEVEL = 0.05
@@ -132,7 +132,7 @@ def configure_plot() -> None:
     """Configure plot parameters."""
     plt.title('Average Pace Profile Comparison')
     plt.xlabel('Distance')
-    plt.ylabel('Pace (MPH)')
+    plt.ylabel('Pace (KMH)')
     distances = ["5K","10K","15K","20K","HALF","25K","30K","35K","40K","Finish Net"]
     plt.xticks(range(len(distances)), distances)
     # Updated: Place legend in the top right inside the plot
@@ -227,7 +227,7 @@ def main():
     """Main execution function."""
     try:
         shoe_choice = load_data(r'D:\BAAFootwear\data\Raw\ShoeChoices.csv')
-        speed = load_data(r'D:\BAAFootwear\data\Raw\MilesPerHour.csv')
+        speed = load_data(r'D:\BAAFootwear\data\Raw\KMH.csv')
         
         shoe_choice = fix_shoe_choices(shoe_choice)
         data = merge_data(shoe_choice, speed)
