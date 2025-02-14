@@ -1,0 +1,18 @@
+# core requirements
+pandas>=1.5.0
+numpy>=1.23.0
+matplotlib>=3.5.0
+seaborn>=0.12.0
+pytorch>=2.0.0
+selenium>=4.0.0
+flask>=2.0.0
+
+# development tools
+click>=8.0.0
+sphinx>=4.0.0
+coverage>=6.0.0
+flake8>=4.0.0
+python-dotenv>=0.5.1
+
+# Remove local package install as it's not needed in conda
+
