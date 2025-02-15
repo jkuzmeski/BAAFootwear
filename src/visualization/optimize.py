@@ -227,7 +227,7 @@ def main():
     """Main execution function."""
     try:
         shoe_choice = load_data(r'D:\BAAFootwear\data\Raw\ShoeChoices.csv')
-        speed = load_data(r'D:\BAAFootwear\data\Raw\KMH.csv')
+        speed = load_data(r'D:\BAAFootwear\data\Raw\KMH_percent.csv')
         
         shoe_choice = fix_shoe_choices(shoe_choice)
         data = merge_data(shoe_choice, speed)

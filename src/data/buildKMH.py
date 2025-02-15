@@ -46,9 +46,19 @@ for i in range(len(checkpoints)):  # Changed to include all checkpoints
         # Calculate speed between checkpoints
         df[current] = distance_diff / time_diff
 
-# Remove the temporary hours columns
+# Create percent change dataframe
+df_percent = df.copy()
+base_speed = df['5K']  # Using 5K as the reference point
+
+# Calculate percent change relative to 5K (negative values indicate slower speeds)
+for checkpoint in checkpoints:
+    df_percent[checkpoint] = ((df[checkpoint] - base_speed) / base_speed) * 100
+
+# Remove the temporary hours columns from both dataframes
 hours_columns = [col for col in df.columns if col.endswith('_hours')]
 df = df.drop(columns=hours_columns)
+df_percent = df_percent.drop(columns=hours_columns)
 
-# Save the dataframe to a new CSV file
+# Save both dataframes to CSV files
 df.to_csv("D:/BAAFootwear/data/Raw/KMH.csv", index=False)
+df_percent.to_csv("D:/BAAFootwear/data/Raw/KMH_percent.csv", index=False)
