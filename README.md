@@ -1,121 +1,132 @@
 # Boston Marathon Footwear Analysis
 
-A project to analyze and classify footwear used in the Boston Marathon using computer vision and machine learning.
+A tool to collect and analyze what shoes runners wear in the Boston Marathon. This project helps identify trends in running shoe choices among marathon participants.
 
-## Quick Start Guide
+## What This Tool Does
 
-### 1. System Requirements
-- Python 3.8 or higher
-- Google Chrome browser
-- Windows OS (for current path configurations)
+1. Collects runner data from the Boston Marathon results
+2. Shows you photos of runners from MarathonFoto
+3. Lets you identify what shoes each runner is wearing
+4. Saves this information for later analysis
 
-### 2. Installation Steps
+## Before You Start
 
-1. Install Miniconda:
-   - Download Miniconda from [Miniconda](https://docs.conda.io/en/latest/miniconda.html)
-   - Run the installer and follow the installation steps
-   - During installation:
-     - Choose "Install for all users" (recommended)
-     - Add Miniconda to PATH when prompted
-   - Verify installation by opening a new terminal and running:
-     ```cmd
-     conda --version
+You'll need:
+- A computer running Windows or Mac
+- Internet connection
+- About 10GB of free disk space
+- Basic knowledge of using command prompt (Windows) or terminal (Mac)
+
+## Installation Guide
+
+### Step 1: Install Python
+
+#### Windows:
+1. Go to [Python.org](https://www.python.org/downloads/)
+2. Download the latest Python installer
+3. Run the installer
+4. ✓ Check "Add Python to PATH" during installation
+5. Click "Install Now"
+
+#### Mac:
+1. Open Terminal
+2. Install Homebrew if you don't have it:
+   ```
+   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
+   ```
+3. Install Python:
+   ```
+   brew install python
+   ```
+
+### Step 2: Install Chrome Browser and WebDriver
+
+1. Install Google Chrome if you don't have it: [Download Chrome](https://www.google.com/chrome/)
+
+2. Download ChromeDriver:
+   - Go to [ChromeDriver Downloads](https://chromedriver.chromium.org/downloads)
+   - Download the version that matches your Chrome browser
+
+3. Setup ChromeDriver:
+   #### Windows:
+   - Create folder: `C:\Program Files (x86)\chromedriver-win64`
+   - Extract chromedriver.exe to this folder
+
+   #### Mac:
+   - Extract chromedriver to `/usr/local/bin`:
+     ```
+     sudo mv ~/Downloads/chromedriver /usr/local/bin
      ```
 
-2. Download and Install Chrome WebDriver:
-   - Download ChromeDriver from [Chrome WebDriver](https://chromedriver.chromium.org/downloads)
-   - Extract and place chromedriver.exe in `C:\Program Files (x86)\chromedriver-win64\`
+### Step 3: Set Up the Project
 
-3. Clone or download this repository:
-   ```cmd
-   git clone https://github.com/jkuzmeski/BAAFootwear.git
-   cd BAAFootwear
+1. Download this project:
+   - Click the green "Code" button above
+   - Choose "Download ZIP"
+   - Extract the ZIP file somewhere on your computer
+
+2. Open command prompt (Windows) or terminal (Mac)
+
+3. Navigate to the project folder:
+   ```
+   cd path/to/extracted/folder
    ```
 
-4. Create and activate a conda environment:
-   ```Anaconda prompt
-   conda create -n baafootwear python=3.8
-   conda activate baafootwear
+4. Install required software:
+   ```
+   pip install -r requirements.txt
    ```
 
-5. Install required packages:
-   ```cmd
-   conda install --file requirements.txt
+## Using the Tool
+
+1. Start the data collection:
+   ```
+   python src/data/make_dataset.py
+   ```
+   This will gather runner information from the marathon results.
+
+2. Start the shoe identification tool:
+   ```
+   python src/data/ScrapingMarathonfoto.py
    ```
 
-### 3. Running the Program
+3. For each runner:
+   - A window will open showing marathon photos
+   - Another window will show shoe options
+   - Click the shoe that matches what the runner is wearing
+   - The tool automatically moves to the next runner
 
-1. Data Collection:
-   ```cmd
-   python src\data\make_dataset.py
-   ```
-   This will collect race data from the Boston Marathon results.
+## Help & Troubleshooting
 
-2. Shoe Classification:
-   ```cmd
-   python src\data\ScrapingMarathonfoto.py
-   ```
-   This will:
-   - Open marathon photos for each runner
-   - Present a UI for shoe classification
-   - Save shoe choices to a CSV file
+Common issues:
 
-### 4. Project Structure
+1. "Python not found"
+   - Reinstall Python and make sure to check "Add Python to PATH"
 
-default
-==============================
+2. "ChromeDriver error"
+   - Make sure Chrome browser is installed
+   - Download the matching ChromeDriver version
+   - Check if ChromeDriver is in the correct location
 
-This is the default data science structure I am learning
+3. "Module not found"
+   - Run `pip install -r requirements.txt` again
 
-Project Organization
-------------
+For more help, create an issue on GitHub or contact the project maintainers.
 
-    ├── LICENSE
-    ├── Makefile           <- Makefile with commands like `make data` or `make train`
-    ├── README.md          <- The top-level README for developers using this project.
-    ├── data
-    │   ├── external       <- Data from third party sources.
-    │   ├── interim        <- Intermediate data that has been transformed.
-    │   ├── processed      <- The final, canonical data sets for modeling.
-    │   └── raw            <- The original, immutable data dump.
-    │
-    ├── docs               <- A default Sphinx project; see sphinx-doc.org for details
-    │
-    ├── models             <- Trained and serialized models, model predictions, or model summaries
-    │
-    ├── notebooks          <- Jupyter notebooks. Naming convention is a number (for ordering),
-    │                         the creator's initials, and a short `-` delimited description, e.g.
-    │                         `1.0-jqp-initial-data-exploration`.
-    │
-    ├── references         <- Data dictionaries, manuals, and all other explanatory materials.
-    │
-    ├── reports            <- Generated analysis as HTML, PDF, LaTeX, etc.
-    │   └── figures        <- Generated graphics and figures to be used in reporting
-    │
-    ├── requirements.txt   <- The requirements file for reproducing the analysis environment, e.g.
-    │                         generated with `pip freeze > requirements.txt`
-    │
-    ├── setup.py           <- makes project pip installable (pip install -e .) so src can be imported
-    ├── src                <- Source code for use in this project.
-    │   ├── __init__.py    <- Makes src a Python module
-    │   │
-    │   ├── data           <- Scripts to download or generate data
-    │   │   └── make_dataset.py
-    │   │
-    │   ├── features       <- Scripts to turn raw data into features for modeling
-    │   │   └── build_features.py
-    │   │
-    │   ├── models         <- Scripts to train models and then use trained models to make
-    │   │   │                 predictions
-    │   │   ├── predict_model.py
-    │   │   └── train_model.py
-    │   │
-    │   └── visualization  <- Scripts to create exploratory and results oriented visualizations
-    │       └── visualize.py
-    │
-    └── tox.ini            <- tox file with settings for running tox; see tox.readthedocs.io
+## Privacy & Usage
 
+- This tool only accesses publicly available race photos
+- Data is stored locally on your computer
+- Please use responsibly and respect marathon participants' privacy
 
---------
+## Contributing
 
-<p><small>Project based on the <a target="_blank" href="https://drivendata.github.io/cookiecutter-data-science/">cookiecutter data science project template</a>. #cookiecutterdatascience</small></p>
+Want to help improve this project? We welcome:
+- Bug reports
+- Feature suggestions
+- Code improvements
+- Documentation updates
+
+## License
+
+This project is shared under the MIT license. You're free to use and modify it.
