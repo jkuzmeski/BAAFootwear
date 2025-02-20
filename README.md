@@ -77,6 +77,27 @@ You'll need:
    pip install -r requirements.txt
    ```
 
+### Step 4: Configure File Paths
+
+The tool uses several CSV files and needs to know where to find them. You'll need to update these paths in the code:
+
+1. Open `src/data/ScrapingMarathonfoto.py` in a text editor
+
+2. Find and modify these paths to match your setup:
+   ```python
+   # For shoe choices storage
+   'D:\\BAAFootwear\\data\\Raw\\ShoeChoices.csv'
+   
+   # For race results data
+   'D:\\BAAFootwear\\data\\Processed\\RaceTimeSeconds.csv'
+   ```
+
+3. Use double backslashes (\\) on Windows or forward slashes (/) on Mac:
+   - Windows example: `D:\\BAAFootwear\\data\\Raw\\ShoeChoices.csv`
+   - Mac example: `/Users/yourname/BAAFootwear/data/Raw/ShoeChoices.csv`
+
+4. Make sure these directories exist on your system before running the tool
+
 ## Using the Tool
 
 1. Start the data collection:
@@ -96,6 +117,33 @@ You'll need:
    - Click the shoe that matches what the runner is wearing
    - The tool automatically moves to the next runner
 
+## Student Contributor Setup
+
+If you're a student helping with shoe classification:
+
+1. Create a GitHub account if you don't have one
+
+2. Share your GitHub username with your John
+
+3. John will:
+   - Add you as a collaborator with restricted permissions
+   - Set up branch protection rules allowing you to only modify shoeChoices.csv
+
+4. Clone the repository:
+   ```
+   git clone https://github.com/jkuzmeski/BAAFootwear.git
+   ```
+
+5. When working:
+   - Commit and push your changes:
+     ```
+     git add shoeChoices.csv
+     git commit -m "Data labing MM-DD-YYYY"
+     git push
+     ```
+
+Note: You will only be able to modify shoeChoices.csv. Other file changes will be rejected.
+
 ## Help & Troubleshooting
 
 Common issues:
@@ -111,22 +159,5 @@ Common issues:
 3. "Module not found"
    - Run `pip install -r requirements.txt` again
 
-For more help, create an issue on GitHub or contact the project maintainers.
 
-## Privacy & Usage
 
-- This tool only accesses publicly available race photos
-- Data is stored locally on your computer
-- Please use responsibly and respect marathon participants' privacy
-
-## Contributing
-
-Want to help improve this project? We welcome:
-- Bug reports
-- Feature suggestions
-- Code improvements
-- Documentation updates
-
-## License
-
-This project is shared under the MIT license. You're free to use and modify it.
