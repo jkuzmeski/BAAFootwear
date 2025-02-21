@@ -12,7 +12,7 @@ import time
 import os
 
 
-path = "/Users/joshcohen/Downloads/chromedriver-mac-arm64/chromedriver"
+path = "C:\\Program Files (x86)\\chromedriver-win64\\chromedriver.exe"
 service = Service(executable_path=path)
 
 # Add options to make Chrome more stable
@@ -20,7 +20,7 @@ options = Options()
 options.add_argument("--no-sandbox")  # Bypass OS security model
 options.add_argument("--disable-dev-shm-usage")  # Overcome limited resource problems
 
-driver = webdriver.Chrome(service=service, options=options)
+driver = webdriver.Chrome(options=options)
 
 app = Flask(__name__)
 
@@ -127,7 +127,7 @@ def submit():
     '''
 
 def save_shoe_choice(bib, name, shoe_choice):
-    with open('/Users/joshcohen/Documents/BAAFootwear/data/Raw/ShoeChoices.csv', 'a') as f:
+    with open('D:\\BAAFootwear\\data\\Raw\\ShoeChoices.csv', 'a') as f:
         f.write(f"{bib},{name},{shoe_choice}\n")
 
 def show_shoe_selection_page(driver, bib, name, runners_left):
@@ -174,10 +174,11 @@ def close_other_tabs(driver, original_window):
     # Switch back to the original tab
     driver.switch_to.window(original_window)
 
-RaceTimeSeconds = pd.read_csv('/Users/joshcohen/Documents/BAAFootwear/data/Raw/RaceTimeSeconds.csv', encoding='latin1')
+RaceTimeSeconds = pd.read_csv('D:\\BAAFootwear\\data\\Processed\\RaceTimeSeconds.csv', encoding='latin1')
 
 def get_processed_bibs():
-    shoe_choices_path = '/Users/joshcohen/Documents/BAAFootwear/data/Raw/ShoeChoices.csv'
+    shoe_choices_path = 'D:\\BAAFootwear\\data\\Raw\\ShoeChoices.csv'
+
     if not os.path.exists(shoe_choices_path):
         return set()
     
