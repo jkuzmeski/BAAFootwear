@@ -10,10 +10,11 @@ from statsmodels.stats.anova import AnovaRM
 from statsmodels.stats.multicomp import pairwise_tukeyhsd
 import statsmodels.api as sm
 
+# Set matplotlib style
+plt.style.use('seaborn-v0_8-dark-palette')
 # Constants
 MINIMUM_RUNNERS = 20
 FIGURE_SIZE = (12, 8)
-COLORS = ['b', 'g', 'r', 'c', 'm', 'y', 'k', '#FFA500', '#800080', '#008080']
 SIGNIFICANCE_LEVEL = 0.05
 CHECKPOINT_DISTANCES = ['0K', '5K', '10K', '15K', '20K', '25K', '30K', '35K', '40K', 'Finish']  # distances in KM
 CHECKPOINT_METERS = [0,5000,10000,15000,20000,25000,30000,35000,40000,42200]  # convert to meters, marathon is 42.195km
@@ -90,6 +91,7 @@ def plot_elevation_profile(ax):
     # Convert kilometers to meters in the elevation data
     elevation_data['Distance (M)'] = elevation_data['Distance (M)'] * 1000
     ax.plot(elevation_data['Distance (M)'], elevation_data['Elevation (M)'], 'k-', label='Elevation')
+    ax.fill_between(elevation_data['Distance (M)'], elevation_data['Elevation (M)'], color='lightgrey', alpha=0.5)
     ax.set_ylabel('Elevation (M)')
     ax.set_title('Boston Marathon Elevation Profile')
     ax.set_xticks(CHECKPOINT_METERS)
@@ -98,7 +100,7 @@ def plot_elevation_profile(ax):
     ax.grid(True)
 
     
-def plot_shoe_data(data_to_plot: pd.DataFrame, name: str, color: str, 
+def plot_shoe_data(data_to_plot: pd.DataFrame, name: str, 
                    trendline_data: Dict, ax) -> None:
     """Plot data for a specific shoe or shoe family."""
     runner_count = len(data_to_plot)
@@ -118,8 +120,9 @@ def plot_shoe_data(data_to_plot: pd.DataFrame, name: str, color: str,
         'n': len(processed_data.columns)
     }
     
-    ax.plot(x, avg_curve.values, f'{color}o-', label=f'{name} ({runner_count})')
-    ax.plot(x, slope * x + intercept, f'{color}--', alpha=0.5)
+    # Let matplotlib use its default color cycle
+    ax.plot(x, avg_curve.values, 'o-', label=f'{name} ({runner_count})')
+    ax.plot(x, slope * x + intercept, '--', alpha=0.5)
 
 def analyze_data(data: pd.DataFrame, shoe_choices: np.ndarray) -> Dict:
     """Analyze and visualize shoe performance data."""
@@ -147,8 +150,7 @@ def analyze_data(data: pd.DataFrame, shoe_choices: np.ndarray) -> Dict:
         processed_shoes.update(family_shoes)
         
         if len(family_data) >= MINIMUM_RUNNERS:
-            plot_shoe_data(family_data, family.name, 
-                          COLORS[plot_index % len(COLORS)], trendline_data, ax2)
+            plot_shoe_data(family_data, family.name, trendline_data, ax2)
             plot_index += 1
     
     # Process remaining individual shoes
@@ -156,11 +158,11 @@ def analyze_data(data: pd.DataFrame, shoe_choices: np.ndarray) -> Dict:
         if shoe not in processed_shoes:
             shoe_data = data[data['shoeChoice'] == shoe]
             if len(shoe_data) >= MINIMUM_RUNNERS:
-                plot_shoe_data(shoe_data, shoe, 
-                             COLORS[plot_index % len(COLORS)], trendline_data, ax2)
+                plot_shoe_data(shoe_data, shoe, trendline_data, ax2)
                 plot_index += 1
     
     configure_plot(ax2)
+    # plt.tight_layout()
     plt.show()
     return trendline_data
 
@@ -168,11 +170,14 @@ def configure_plot(ax) -> None:
     """Configure plot parameters."""
     ax.set_title('Average Pace Profile Comparison')
     ax.set_xlabel('Distance (m)')
-    ax.set_ylabel('Pace (KMH)')
+    ax.set_ylabel('Percent Pace Change')
+    ax.set_xlim(-500, 42700)
     ax.set_xticks(CHECKPOINT_METERS)
     ax.set_xticklabels(CHECKPOINT_DISTANCES)  # Add thousands separator
     ax.legend(loc='upper right')
     ax.grid(True)
+    
+
 
 
 
