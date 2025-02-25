@@ -10,10 +10,11 @@ from statsmodels.stats.anova import AnovaRM
 from statsmodels.stats.multicomp import pairwise_tukeyhsd
 import statsmodels.api as sm
 
-# Set matplotlib style
-plt.style.use('seaborn-v0_8-dark-palette')
+
+
 # Constants
-MINIMUM_RUNNERS = 20
+INCLUDE_QUESTION_MARKS = True  # Set to True to include "Question Mark" entries
+MINIMUM_RUNNERS = 10
 FIGURE_SIZE = (12, 8)
 SIGNIFICANCE_LEVEL = 0.05
 CHECKPOINT_DISTANCES = ['0K', '5K', '10K', '15K', '20K', '25K', '30K', '35K', '40K', 'Finish']  # distances in KM
@@ -27,10 +28,28 @@ class ShoeFamily:
 
 # Configuration
 SHOE_FAMILIES = [
-    ShoeFamily("Adios", ["adios"]),
-    ShoeFamily("Vaporfly", ["vaporfly"]),
-    ShoeFamily("Alphafly", ["alphafly"]),
+    ShoeFamily("Adios Family", ["adios"]),
+    ShoeFamily("Vaporfly Family", ["vaporfly"]),
+    ShoeFamily("Alphafly Family", ["alphafly"]),
+    ShoeFamily("Saucony Family", ["saucony"]),
+    ShoeFamily("Hoka Family", ["hoka"]),
+    ShoeFamily("Asics Family", ["asics"])
 ]
+
+# Set color scheme - 10 distinct, visually pleasing colors
+SHOE_COLORS = [
+    "#2ecc71",  # emerald green
+    "#e74c3c",  # coral red
+    "#3498db",  # bright blue
+    "#9b59b6",  # amethyst purple
+    "#f1c40f",  # sun yellow
+    "#e67e22",  # carrot orange
+    "#16a085",  # green sea
+    "#8e44ad",  # wisteria purple
+    "#d35400",  # pumpkin orange
+    "#27ae60",  # nephritis green
+]
+
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -58,8 +77,10 @@ def fix_shoe_choices(data: pd.DataFrame) -> pd.DataFrame:
     """Fix shoe choices data structure."""
     data = pd.concat([data, data.loc[[0]]], ignore_index=True)
     data.columns = ['bib', 'LastName', 'shoeChoice']
-    #remove any rows with "Question Mark" in the shoeChoice column
-    data = data[~data['shoeChoice'].str.contains('Question Mark')]
+    
+    # Only filter out Question Marks if configured to do so
+    if not INCLUDE_QUESTION_MARKS:
+        data = data[~data['shoeChoice'].str.contains('Question Mark')]
     return data
 
 def merge_data(data1: pd.DataFrame, data2: pd.DataFrame) -> pd.DataFrame:
@@ -109,7 +130,6 @@ def plot_shoe_data(data_to_plot: pd.DataFrame, name: str,
     processed_data = data_to_plot.drop(['shoeChoice', 'bib'], axis=1).T.astype(float)
     avg_curve = processed_data.mean(axis=1)
     
-    # Use the meter distances for x-axis
     x = np.array(CHECKPOINT_METERS)
     slope, intercept = calculate_trendline(avg_curve.values)
     
@@ -120,9 +140,10 @@ def plot_shoe_data(data_to_plot: pd.DataFrame, name: str,
         'n': len(processed_data.columns)
     }
     
-    # Let matplotlib use its default color cycle
-    ax.plot(x, avg_curve.values, 'o-', label=f'{name} ({runner_count})')
-    ax.plot(x, slope * x + intercept, '--', alpha=0.5)
+    # Let matplotlib automatically cycle through colors
+    line = ax.plot(x, avg_curve.values, 'o-', label=f'{name} ({runner_count})')
+    # Use the same color for the trendline
+    ax.plot(x, slope * x + intercept, '--', color=line[0].get_color(), alpha=0.5)
 
 def analyze_data(data: pd.DataFrame, shoe_choices: np.ndarray) -> Dict:
     """Analyze and visualize shoe performance data."""
@@ -173,7 +194,7 @@ def configure_plot(ax) -> None:
     ax.set_ylabel('Percent Pace Change')
     ax.set_xlim(-500, 42700)
     ax.set_xticks(CHECKPOINT_METERS)
-    ax.set_xticklabels(CHECKPOINT_DISTANCES)  # Add thousands separator
+    ax.set_xticklabels(CHECKPOINT_DISTANCES)
     ax.legend(loc='upper right')
     ax.grid(True)
     
