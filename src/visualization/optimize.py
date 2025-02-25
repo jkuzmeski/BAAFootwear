@@ -15,7 +15,9 @@ MINIMUM_RUNNERS = 20
 FIGURE_SIZE = (12, 8)
 COLORS = ['b', 'g', 'r', 'c', 'm', 'y', 'k', '#FFA500', '#800080', '#008080']
 SIGNIFICANCE_LEVEL = 0.05
-CHECKPOINT_DISTANCES = [5, 10, 15, 20, 21.1, 25, 30, 35, 40, 42.2]  # distances in KM
+CHECKPOINT_DISTANCES = ['0K', '5K', '10K', '15K', '20K', '25K', '30K', '35K', '40K', 'Finish']  # distances in KM
+CHECKPOINT_METERS = [0,5000,10000,15000,20000,25000,30000,35000,40000,42200]  # convert to meters, marathon is 42.195km
+
 
 @dataclass
 class ShoeFamily:
@@ -40,6 +42,16 @@ def load_data(data_path: str) -> pd.DataFrame:
     except Exception as e:
         logger.error(f"Error loading data from {data_path}: {str(e)}")
         raise
+
+def fix_percents(data: pd.DataFrame) -> pd.DataFrame:
+    """Fix percentage data structure."""
+    #add a column for 0K that is all zeros
+    data['0K'] = 0
+    #reorder columns
+    data = data[['bib', 'name', '0K', '5K', '10K', '15K', '20K', '25K', '30K', '35K', '40K', 'Finish Net']]
+    return data
+
+    
 
 def fix_shoe_choices(data: pd.DataFrame) -> pd.DataFrame:
     """Fix shoe choices data structure."""
@@ -66,21 +78,37 @@ def get_shoe_choices(data: pd.DataFrame) -> np.ndarray:
     return data['shoeChoice'].unique()
 
 def calculate_trendline(data: np.ndarray) -> Tuple[float, float]:
-    """Calculate trendline parameters."""
-    x = np.arange(len(data))
+    """Calculate trendline parameters using actual meter distances."""
+    x = np.array(CHECKPOINT_METERS)  # Use actual meter distances
     return np.polyfit(x, data, 1)
 
+def plot_elevation_profile(ax):
+    #load the elevation data from csv
+    elevation_data = pd.read_csv(r'D:\BAAFootwear\src\visualization\RouteProfile.csv')
+    rename = {'Distance from Start (km)': 'Distance (M)', 'Height Above Sea Level (m)': 'Elevation (M)'}
+    elevation_data = elevation_data.rename(columns=rename)
+    # Convert kilometers to meters in the elevation data
+    elevation_data['Distance (M)'] = elevation_data['Distance (M)'] * 1000
+    ax.plot(elevation_data['Distance (M)'], elevation_data['Elevation (M)'], 'k-', label='Elevation')
+    ax.set_ylabel('Elevation (M)')
+    ax.set_title('Boston Marathon Elevation Profile')
+    ax.set_xticks(CHECKPOINT_METERS)
+    ax.set_ylim(0, 150)
+    ax.legend(loc='upper right')
+    ax.grid(True)
+
+    
 def plot_shoe_data(data_to_plot: pd.DataFrame, name: str, color: str, 
-                   trendline_data: Dict) -> None:
+                   trendline_data: Dict, ax) -> None:
     """Plot data for a specific shoe or shoe family."""
     runner_count = len(data_to_plot)
     logger.info(f"{name} includes {runner_count} runners")
     
-    # Updated: Remove [1:] to include all 10 data points
     processed_data = data_to_plot.drop(['shoeChoice', 'bib'], axis=1).T.astype(float)
-    
     avg_curve = processed_data.mean(axis=1)
-    x = np.arange(len(avg_curve))
+    
+    # Use the meter distances for x-axis
+    x = np.array(CHECKPOINT_METERS)
     slope, intercept = calculate_trendline(avg_curve.values)
     
     trendline_data[name] = {
@@ -90,12 +118,19 @@ def plot_shoe_data(data_to_plot: pd.DataFrame, name: str, color: str,
         'n': len(processed_data.columns)
     }
     
-    plt.plot(x, avg_curve.values, f'{color}o-', label=f'{name} ({runner_count})')
-    plt.plot(x, slope * x + intercept, f'{color}--', alpha=0.5)
+    ax.plot(x, avg_curve.values, f'{color}o-', label=f'{name} ({runner_count})')
+    ax.plot(x, slope * x + intercept, f'{color}--', alpha=0.5)
 
 def analyze_data(data: pd.DataFrame, shoe_choices: np.ndarray) -> Dict:
     """Analyze and visualize shoe performance data."""
-    plt.figure(figsize=FIGURE_SIZE)
+    # Create figure with two subplots sharing x-axis
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 10), height_ratios=[1, 3], sharex=True)
+    fig.subplots_adjust(hspace=0.1)
+    
+    # Plot elevation profile on top subplot
+    plot_elevation_profile(ax1)
+    
+    # Plot speed data on bottom subplot
     trendline_data = {}
     processed_shoes = set()
     plot_index = 0
@@ -113,7 +148,7 @@ def analyze_data(data: pd.DataFrame, shoe_choices: np.ndarray) -> Dict:
         
         if len(family_data) >= MINIMUM_RUNNERS:
             plot_shoe_data(family_data, family.name, 
-                          COLORS[plot_index % len(COLORS)], trendline_data)
+                          COLORS[plot_index % len(COLORS)], trendline_data, ax2)
             plot_index += 1
     
     # Process remaining individual shoes
@@ -122,120 +157,38 @@ def analyze_data(data: pd.DataFrame, shoe_choices: np.ndarray) -> Dict:
             shoe_data = data[data['shoeChoice'] == shoe]
             if len(shoe_data) >= MINIMUM_RUNNERS:
                 plot_shoe_data(shoe_data, shoe, 
-                             COLORS[plot_index % len(COLORS)], trendline_data)
+                             COLORS[plot_index % len(COLORS)], trendline_data, ax2)
                 plot_index += 1
     
-    configure_plot()
+    configure_plot(ax2)
+    plt.show()
     return trendline_data
 
-def configure_plot() -> None:
+def configure_plot(ax) -> None:
     """Configure plot parameters."""
-    plt.title('Average Pace Profile Comparison')
-    plt.xlabel('Distance')
-    plt.ylabel('Pace (KMH)')
-    distances = ["5K","10K","15K","20K","HALF","25K","30K","35K","40K","Finish Net"]
-    plt.xticks(range(len(distances)), distances)
-    # Updated: Place legend in the top right inside the plot
-    plt.legend(loc='upper right')
-    plt.grid(True)
-    plt.tight_layout()
-    plt.show()
+    ax.set_title('Average Pace Profile Comparison')
+    ax.set_xlabel('Distance (m)')
+    ax.set_ylabel('Pace (KMH)')
+    ax.set_xticks(CHECKPOINT_METERS)
+    ax.set_xticklabels(CHECKPOINT_DISTANCES)  # Add thousands separator
+    ax.legend(loc='upper right')
+    ax.grid(True)
 
-def perform_ancova(trendline_data: Dict, data: pd.DataFrame) -> None:
-    """Perform ANCOVA analysis on shoe performance data."""
-    if len(trendline_data) < 2:
-        logger.warning("Not enough groups to perform statistical comparison.")
-        return
 
-    # Prepare data for ANCOVA
-    ancova_data = []
-    
-    # Only process shoes that are in trendline_data
-    for shoe_name, shoe_stats in trendline_data.items():
-        # Find the corresponding shoe data
-        shoe_data = data[data['shoeChoice'].str.contains(shoe_name, case=False)]
-        
-        # Reshape data for analysis
-        shoe_speeds = shoe_data.drop(['shoeChoice', 'bib'], axis=1)
-        
-        # Update: Use actual checkpoint distances instead of sequential miles
-        for runner in shoe_speeds.index:
-            runner_speeds = shoe_speeds.loc[runner]
-            for distance, speed in zip(CHECKPOINT_DISTANCES, runner_speeds):
-                ancova_data.append({
-                    'Shoe': shoe_name,
-                    'Distance': distance,  # Changed from 'Mile' to 'Distance'
-                    'Speed': speed,
-                    'Runner': runner
-                })
-    
-    # Convert to DataFrame
-    ancova_df = pd.DataFrame(ancova_data)
-    
-    # Get unique shoes from the ANCOVA data
-    shoes = ancova_df['Shoe'].unique()
-    
-    # Update the ANCOVA model to use Distance instead of Mile
-    model = sm.OLS.from_formula('Speed ~ C(Shoe) + Distance', data=ancova_df).fit()
-    
-    # Print ANCOVA results with better formatting
-    logger.info("\n" + "="*50)
-    logger.info("ANCOVA RESULTS")
-    logger.info("="*50)
-    logger.info("Reference shoe (baseline): Adios")  # Add this line
-    logger.info("Coefficients show differences compared to Adios\n")  # Add this line
-    logger.info(model.summary().tables[1])
-    
-    # Post-hoc analysis with improved formatting
-    logger.info("\n" + "="*50)
-    logger.info("POST-HOC ANALYSIS (TUKEY HSD)")
-    logger.info("="*50)
-    
-    # Calculate adjusted means for each shoe
-    adjusted_means = {}
-    for shoe in shoes:  # Now shoes is defined
-        shoe_data = ancova_df[ancova_df['Shoe'] == shoe]
-        adjusted_means[shoe] = model.predict({
-            'Shoe': [shoe] * len(shoe_data),
-            'Distance': shoe_data['Distance']
-        }).mean()
-    
-    # Pairwise comparisons with improved formatting
-    for i, shoe1 in enumerate(shoes[:-1]):
-        for shoe2 in shoes[i+1:]:
-            diff = adjusted_means[shoe1] - adjusted_means[shoe2]
-            t_stat, p_val = stats.ttest_ind(
-                ancova_df[ancova_df['Shoe'] == shoe1]['Speed'],
-                ancova_df[ancova_df['Shoe'] == shoe2]['Speed']
-            )
-            
-            significance = "✓ SIGNIFICANT" if p_val < SIGNIFICANCE_LEVEL else "✗ NOT SIGNIFICANT"
-            
-            result = (
-                f"\n╔{'═'*58}╗\n"
-                f"║ {shoe1.upper()} vs {shoe2.upper():<{47-len(shoe1)}}║\n"
-                f"╠{'═'*58}╣\n"
-                f"║ Adjusted Mean Difference:  {diff:>8.3f} MPH{' '*13}║\n"
-                f"║ T-statistic:               {t_stat:>8.3f}{' '*17}║\n"
-                f"║ P-value:                   {p_val:>8.4f}{' '*17}║\n"
-                f"║ Result:                    {significance:<20}{' '*5}║\n"
-                f"╚{'═'*58}╝"
-            )
-            logger.info(result)
 
 def main():
     """Main execution function."""
     try:
         shoe_choice = load_data(r'D:\BAAFootwear\data\Raw\ShoeChoices.csv')
-        speed = load_data(r'D:\BAAFootwear\data\Raw\KMH_percent.csv')
+        speed = load_data(r'D:\BAAFootwear\data\Raw\KMH_percent_noHalf.csv')
         
+        speed = fix_percents(speed)
         shoe_choice = fix_shoe_choices(shoe_choice)
         data = merge_data(shoe_choice, speed)
         shoe_choices = get_shoe_choices(data)
         
         trendline_data = analyze_data(data, shoe_choices)
-        perform_ancova(trendline_data, data)  # Replace compare_trendlines with perform_ancova
-        
+
     except Exception as e:
         logger.error("An error occurred: %s", str(e))
         raise

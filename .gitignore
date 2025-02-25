@@ -77,7 +77,7 @@ target/
 
 # exclude data from source control by default
 #/data/
-src/
+src/data/ScrapingMarathonfoto.py
 
 # Mac OS-specific storage files
 .DS_Store
