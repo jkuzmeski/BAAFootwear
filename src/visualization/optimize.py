@@ -13,8 +13,8 @@ import statsmodels.api as sm
 
 
 # Constants
-INCLUDE_QUESTION_MARKS = True  # Set to True to include "Question Mark" entries
-MINIMUM_RUNNERS = 10
+INCLUDE_QUESTION_MARKS = False  # Set to True to include "Question Mark" entries
+MINIMUM_RUNNERS = 20
 FIGURE_SIZE = (12, 8)
 SIGNIFICANCE_LEVEL = 0.05
 CHECKPOINT_DISTANCES = ['0K', '5K', '10K', '15K', '20K', '25K', '30K', '35K', '40K', 'Finish']  # distances in KM
