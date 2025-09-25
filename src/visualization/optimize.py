@@ -199,6 +199,112 @@ def configure_plot(ax) -> None:
     ax.grid(True)
     
 
+# --- New LMM Function ---
+def run_linear_mixed_model(data_for_analysis: pd.DataFrame,
+                           checkpoint_cols: List[str],
+                           ref_family: str = None):
+    """
+    Performs a Linear Mixed-Effects Model analysis on pace change data.
+
+    Args:
+        data_for_analysis: DataFrame containing runner data, including 'bib',
+                           'ShoeFamily', and checkpoint pace columns. Should already
+                           be filtered for families meeting minimum runner count.
+        checkpoint_cols: List of column names representing pace change at checkpoints.
+        ref_family: Optional name of the shoe family to use as the reference level
+                    for comparisons in the model summary. If None, statsmodels picks one.
+
+    Returns:
+        Fitted MixedLMResults object, or None if analysis fails.
+    """
+    logger.info("--- Starting Linear Mixed-Effects Model Analysis ---")
+
+    if data_for_analysis.empty:
+        logger.error("Input data for LMM is empty. Skipping analysis.")
+        return None
+
+    # 1. Reshape data from wide to long format
+    try:
+        id_vars = ['bib', 'ShoeFamily'] # Add other relevant runner-level vars if needed
+        value_vars = [col for col in checkpoint_cols if col in data_for_analysis.columns]
+        if not value_vars:
+             logger.error("No valid checkpoint columns found in the data for melting.")
+             return None
+
+        long_data = pd.melt(data_for_analysis,
+                            id_vars=id_vars,
+                            value_vars=value_vars,
+                            var_name='Distance',
+                            value_name='PaceChange')
+        logger.info(f"Data reshaped to long format: {long_data.shape[0]} observations.")
+
+        # Convert PaceChange to numeric, coercing errors
+        long_data['PaceChange'] = pd.to_numeric(long_data['PaceChange'], errors='coerce')
+
+        # Handle potential missing values created by coercion or already present
+        initial_rows = len(long_data)
+        long_data.dropna(subset=['PaceChange'], inplace=True)
+        if len(long_data) < initial_rows:
+            logger.warning(f"Removed {initial_rows - len(long_data)} rows with missing PaceChange values.")
+
+        if long_data.empty:
+            logger.error("No valid observations remain after handling missing PaceChange. Skipping LMM.")
+            return None
+
+        # Ensure Distance is treated as categorical (ordered)
+        # Create an ordered categorical type based on the sequence in checkpoint_cols
+        distance_cat_type = pd.CategoricalDtype(categories=value_vars, ordered=True)
+        long_data['Distance'] = long_data['Distance'].astype(distance_cat_type)
+
+        # Ensure ShoeFamily is categorical, potentially setting reference level
+        families = long_data['ShoeFamily'].unique()
+        if ref_family and ref_family in families:
+             logger.info(f"Setting '{ref_family}' as the reference category for ShoeFamily.")
+             # Use patsy's Treatment contrast to set the reference level
+             long_data['ShoeFamily'] = pd.Categorical(long_data['ShoeFamily'])
+             long_data['ShoeFamily'] = Treatment(reference=families.tolist().index(ref_family)).code_without_intercept(long_data['ShoeFamily'].cat.categories.tolist())[long_data['ShoeFamily'].cat.codes]
+
+        else:
+             if ref_family:
+                  logger.warning(f"Reference family '{ref_family}' not found in data. Using default reference.")
+             long_data['ShoeFamily'] = long_data['ShoeFamily'].astype('category')
+
+
+    except Exception as e:
+        logger.error(f"Error during data reshaping for LMM: {e}")
+        return None
+
+    # 2. Define and Fit the LMM model
+    try:
+        # Formula: PaceChange depends on ShoeFamily, Distance, and their interaction
+        # Random intercept for 'bib' to account for repeated measures per runner
+        # C() ensures categorical treatment in the formula
+        formula = "PaceChange ~ C(ShoeFamily, Sum) + C(Distance, Sum) + C(ShoeFamily, Sum):C(Distance, Sum)"
+        # Using Sum coding for potentially easier interpretation of main effects near the grand mean
+        # Alternatively, use default Treatment coding: "PaceChange ~ C(ShoeFamily) * C(Distance)"
+
+        logger.info(f"Fitting LMM with formula: {formula}")
+        logger.info(f"Grouping variable: bib")
+
+        # Instantiate the model
+        model = smf.mixedlm(formula, data=long_data, groups=long_data["bib"])
+
+        # Fit the model (REML is default and generally preferred for variance components)
+        results = model.fit(reml=True)
+
+        # 3. Print the results summary
+        logger.info("\n--- LMM Results Summary ---")
+        print(results.summary())
+        logger.info("--- End of LMM Results Summary ---")
+
+        return results
+
+    except Exception as e:
+        logger.error(f"Error fitting Linear Mixed-Effects Model: {e}")
+        # You might want to print more detailed traceback here for debugging
+        # import traceback
+        # traceback.print_exc()
+        return None
 
 
 
